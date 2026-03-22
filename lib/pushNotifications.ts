@@ -3,18 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-// Configuration pour les notifications locales et distantes
-if (Platform.OS !== 'web') {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-}
+
 
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   // Les notifications push via expo-notifications ne sont pas supportées sur le web par défaut

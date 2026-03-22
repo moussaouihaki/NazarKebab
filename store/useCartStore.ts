@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from './useAuthStore';
-import { sendPushNotification } from '../lib/pushNotifications';
+import { sendPushNotification, registerForPushNotificationsAsync } from '../lib/pushNotifications';
 import { useNotificationStore } from './useNotificationStore';
 
 
@@ -281,6 +281,14 @@ export const useCartStore = create<CartState>((set, get) => ({
     const subTotal = grandTotal / (1 + taxRate);
     const taxAmount = grandTotal - subTotal;
 
+    let freshPushToken = useAuthStore.getState().user?.pushToken || null;
+    try {
+      const token = await registerForPushNotificationsAsync();
+      if (token) freshPushToken = token;
+    } catch (e) {
+      console.log('Error getting fresh token during order', e);
+    }
+
     const orderData = {
       items: state.items.map(item => ({ ...item, image: null })),
       total: grandTotal,
@@ -298,7 +306,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       subTotal,
       taxAmount,
       userId: userId || useAuthStore.getState().user?.id || null,
-      pushToken: useAuthStore.getState().user?.pushToken || null
+      pushToken: freshPushToken
     };
 
     await setDoc(doc(db, 'orders', orderId), cleanForFirebase(orderData));
