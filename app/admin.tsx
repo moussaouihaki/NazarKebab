@@ -1081,12 +1081,15 @@ function SettingsTab() {
   const [localEmail, setLocalEmail] = useState(settings.email);
   const [localWeb, setLocalWeb] = useState(settings.website);
   const [localInsta, setLocalInsta] = useState(settings.instagram);
+  const [localDelivery, setLocalDelivery] = useState(settings.deliveryTime);
+  const [localTakeaway, setLocalTakeaway] = useState(settings.takeAwayTime);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     updateSettings({
       name: localName, phone: localPhone, address: localAddress,
       email: localEmail, website: localWeb, instagram: localInsta,
+      deliveryTime: localDelivery, takeAwayTime: localTakeaway,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -1094,6 +1097,34 @@ function SettingsTab() {
 
   return (
     <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
+
+      {/* TEMPS ESTIMÉS */}
+      <Text style={[styles.sectionHeader, { color: Theme.colors.success }]}>TEMPS ESTIMÉS RÉELS (AFFICHÉS CLIENT)</Text>
+      <View style={styles.settingsCard}>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Livraison</Text>
+          <TextInput 
+            style={[styles.timeInput, { width: 100, backgroundColor: Theme.colors.surface }]} 
+            value={localDelivery} 
+            onChangeText={setLocalDelivery}
+            placeholder="30-45"
+            placeholderTextColor="#666"
+          />
+        </View>
+        <View style={[styles.switchRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Theme.colors.border, paddingTop: 14, marginTop: 4 }]}>
+          <Text style={styles.switchLabel}>À emporter / Take Away</Text>
+          <TextInput 
+            style={[styles.timeInput, { width: 100, backgroundColor: Theme.colors.surface }]} 
+            value={localTakeaway} 
+            onChangeText={setLocalTakeaway}
+            placeholder="15-20"
+            placeholderTextColor="#666"
+          />
+        </View>
+        <TouchableOpacity style={{ backgroundColor: Theme.colors.success, padding: 12, borderRadius: 8, marginTop: 12, alignItems: 'center' }} onPress={handleSave}>
+           <Text style={{ fontFamily: Theme.fonts.bodyBold, color: '#000' }}>{saved ? '● ENREGISTRÉ !' : 'SAUVEGARDER TEMPS'}</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* INFO GÉNÉRALES */}
       <Text style={styles.sectionHeader}>INFORMATIONS GÉNÉRALES</Text>
@@ -1175,30 +1206,7 @@ function SettingsTab() {
         </View>
       </View>
 
-      {/* TEMPS ESTIMÉS */}
-      <Text style={styles.sectionHeader}>TEMPS ESTIMÉS (MINUTES)</Text>
-      <View style={styles.settingsCard}>
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Livraison</Text>
-          <TextInput 
-            style={[styles.timeInput, { width: 100 }]} 
-            value={settings.deliveryTime} 
-            onChangeText={v => updateSettings({ deliveryTime: v })}
-            placeholder="30-45"
-            placeholderTextColor="#666"
-          />
-        </View>
-        <View style={[styles.switchRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Theme.colors.border, paddingTop: 14, marginTop: 4 }]}>
-          <Text style={styles.switchLabel}>À emporter</Text>
-          <TextInput 
-            style={[styles.timeInput, { width: 100 }]} 
-            value={settings.takeAwayTime} 
-            onChangeText={v => updateSettings({ takeAwayTime: v })}
-            placeholder="15-20"
-            placeholderTextColor="#666"
-          />
-        </View>
-      </View>
+
 
       {/* HORAIRES */}
       <Text style={styles.sectionHeader}>HORAIRES D'OUVERTURE</Text>
