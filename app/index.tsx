@@ -31,7 +31,13 @@ export default function HomeScreen() {
   const populars = products.filter(p => p.highlighted);
   const getCategoryImage = (cat: string) => {
     const prod = products.find(p => p.category === cat);
-    return prod ? prod.image : 'https://images.unsplash.com/photo-1544025162-83b3e64ca658?w=800&q=80';
+    if (prod) return getImageSource(prod.image);
+    
+    // Fallback based on category name
+    const key = cat.toLowerCase().includes('kebab') ? 'kebab' : 
+                cat.toLowerCase().includes('tacos') ? 'tacos' :
+                cat.toLowerCase().includes('pizza') ? 'pizza' : 'kebab';
+    return IMAGES_MAP[key];
   };
 
   const { width } = useWindowDimensions();

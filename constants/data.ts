@@ -13,7 +13,7 @@ export interface Product {
   hasDrinkSelection?: boolean;
 }
 
-const images = {
+export const IMAGES_MAP: Record<string, any> = {
   kebab: require('../assets/images/kebab.png'),
   durum: require('../assets/images/durum.png'),
   tacos: require('../assets/images/tacos.png'),
@@ -38,6 +38,13 @@ const images = {
   drink_50cl: require('../assets/images/bottle_50cl.png'),
   drink_15l: 'https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=800&q=80',
   drink_coffee: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
+};
+
+export const getImageSource = (image: any): any => {
+  if (!image) return IMAGES_MAP.kebab;
+  if (typeof image === 'string' && image.startsWith('http')) return { uri: image };
+  if (typeof image === 'string' && IMAGES_MAP[image]) return IMAGES_MAP[image];
+  return image; // Fallback for local require IDs if they happen to work
 };
 
 export const CATEGORIES = ['MENUS ÉTUDIANTS', 'MENUS MIDI', 'KEBABS', 'TACOS', 'BURGERS', 'SANDWICHS', 'SPÉCIALITÉS', 'ASSIETTES', 'PIZZAS', 'BOISSONS', 'DESSERTS'];
