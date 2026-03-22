@@ -143,32 +143,24 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       // 3. Listen to Products in real-time
       onSnapshot(collection(db, 'products'), (snapshot) => {
         const prodList: Product[] = [];
-        snapshot.forEach(async (docSnap) => {
-          const data = docSnap.data();
-          let image = data.image;
-
-          // Auto-repair: If image is a number (old require mode), sync it to a key
-          if (typeof image === 'number') {
-            // Find a match in INITIAL_PRODUCTS to get the original key
-            const initial = INITIAL_PRODUCTS.find(p => p.id === docSnap.id);
-            if (initial) {
-              // We need to find which key in IMAGES_MAP this number belongs to
-              // but since we don't have the map here easily, we can just use the name as fallback
-              // Better: For seeding, see below.
-              // For now, let's just make sure we don't crash and try to use it.
-            }
-          }
-          
-          prodList.push({ id: docSnap.id, ...data } as Product);
+        snapshot.forEach((docSnap) => {
+          prodList.push({ id: docSnap.id, ...docSnap.data() } as Product);
         });
         
-        // Seed initial products if collection is empty or force sync for images
+        // AUTO-REPAIR: If any product has a broken image (number), fix it from local data
+        prodList.forEach(async (p) => {
+          if (typeof p.image === 'number') {
+            const initial = INITIAL_PRODUCTS.find(ip => ip.id === p.id);
+            const imageKey = typeof initial?.image === 'string' ? initial.image : 'kebab';
+            await updateDoc(doc(db, 'products', p.id), { image: imageKey });
+          }
+        });
+
+        // Seed initial products if collection is empty
         if (prodList.length === 0 && INITIAL_PRODUCTS.length > 0) {
           INITIAL_PRODUCTS.forEach(async (p) => {
-            const { id, image, ...rest } = p;
-            // Find the key name in IMAGES_MAP for this image
-            // We'll update constants/data.ts to use strings primarily
-            await setDoc(doc(db, 'products', id), { ...rest, image: p.id.split('-')[0] }); 
+            const { id, ...rest } = p;
+            await setDoc(doc(db, 'products', id), rest);
           });
         } else {
           set({ products: prodList });
