@@ -50,40 +50,37 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* MOBILE ONLY HEADER */}
-      {!isDesktop && (
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-             <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
-               <Ionicons name="notifications-outline" size={24} color={Theme.colors.textSecondary} />
-               {unreadCount > 0 && (
-                 <View style={styles.notifBadge}>
-                    <Text style={styles.notifBadgeText}>{unreadCount}</Text>
-                 </View>
-               )}
-             </TouchableOpacity>
-             <View style={[styles.logoWrapper, { flexDirection: 'row', alignItems: 'center' }]}>
-               <Image 
-                 source={require('../assets/images/logo.png')} 
-                 style={{ width: 30, height: 30, borderRadius: 15, marginRight: 10 }}
-                 contentFit="contain"
-               />
-               <View>
-                 <Text style={styles.logoNazar}>NAZAR</Text>
-                 <Text style={styles.logoKebab}>KEBAB</Text>
+      <View style={[styles.header, isDesktop && { maxWidth: 1200, alignSelf: 'center', width: '100%' }]}>
+        <View style={styles.headerTop}>
+           <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/notifications')}>
+             <Ionicons name="notifications-outline" size={24} color={Theme.colors.textSecondary} />
+             {unreadCount > 0 && (
+               <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>{unreadCount}</Text>
                </View>
+             )}
+           </TouchableOpacity>
+           <View style={[styles.logoWrapper, { flexDirection: 'row', alignItems: 'center' }]}>
+             <Image 
+               source={require('../assets/images/logo.png')} 
+               style={{ width: 30, height: 30, borderRadius: 15, marginRight: 10 }}
+               contentFit="contain"
+             />
+             <View>
+               <Text style={styles.logoNazar}>NAZAR</Text>
+               <Text style={styles.logoKebab}>KEBAB</Text>
              </View>
-             <TouchableOpacity style={styles.cartButton} onPress={() => router.push('/cart')}>
-               <Ionicons name="bag-handle-outline" size={24} color={Theme.colors.text} />
-               {cartCount > 0 && (
-                 <View style={styles.badge}>
-                   <Text style={styles.badgeText}>{cartCount}</Text>
-                 </View>
-               )}
-             </TouchableOpacity>
-          </View>
+           </View>
+           <TouchableOpacity style={styles.cartButton} onPress={() => router.push('/cart')}>
+             <Ionicons name="bag-handle-outline" size={24} color={Theme.colors.text} />
+             {cartCount > 0 && (
+               <View style={styles.badge}>
+                 <Text style={styles.badgeText}>{cartCount}</Text>
+               </View>
+             )}
+           </TouchableOpacity>
         </View>
-      )}
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
