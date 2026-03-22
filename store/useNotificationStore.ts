@@ -50,6 +50,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   addNotification: (title, message) => {
+    const existing = get().notifications;
+    const now = Date.now();
+    // Anti-doublon : ignorer si même titre+message dans les 3 dernières secondes
+    const isDuplicate = existing.some(n =>
+      n.title === title &&
+      n.message === message &&
+      now - new Date(n.time).getTime() < 3000
+    );
+    if (isDuplicate) return;
+
     const newNotif: AppNotification = {
       id: Math.random().toString(36).substr(2, 9),
       title,
@@ -57,7 +67,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       time: new Date().toISOString(),
       read: false,
     };
-    const updated = [newNotif, ...get().notifications].slice(0, 50);
+    const updated = [newNotif, ...existing].slice(0, 50);
     safeWrite(updated);
     set({ notifications: updated, unreadCount: get().unreadCount + 1 });
   },
