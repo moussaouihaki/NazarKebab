@@ -140,20 +140,32 @@ export default function RootLayout() {
   useEffect(() => {
     const seenIds = new Set<string>();
 
-    const addIfNew = (notifId: string, title: string | null | undefined, body: string | null | undefined) => {
+    const addIfNew = (notifId: string, title: string | null | undefined, body: string | null | undefined, data?: any) => {
+      // Si c'est une notif de commande (orderId dans data), le Firestore listener s'en charge déjà → ignorer
+      if (data?.orderId) return;
       if (!title || !body || seenIds.has(notifId)) return;
       seenIds.add(notifId);
       useNotificationStore.getState().addNotification(title, body);
     };
 
-    // 1. Notification reçue quand app est ouverte (foreground)
+    // 1. Notification reçue quand app est ouverte (foreground) - marketing uniquement
     const subscription = Notifications.addNotificationReceivedListener(notification => {
-      addIfNew(notification.request.identifier, notification.request.content.title, notification.request.content.body);
+      addIfNew(
+        notification.request.identifier,
+        notification.request.content.title,
+        notification.request.content.body,
+        notification.request.content.data
+      );
     });
 
-    // 2. Utilisateur tape sur la notification (depuis background)
+    // 2. Utilisateur tape sur la notification (depuis background) - marketing uniquement
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      addIfNew(response.notification.request.identifier, response.notification.request.content.title, response.notification.request.content.body);
+      addIfNew(
+        response.notification.request.identifier,
+        response.notification.request.content.title,
+        response.notification.request.content.body,
+        response.notification.request.content.data
+      );
     });
 
     return () => {
