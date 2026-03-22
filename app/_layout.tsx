@@ -20,7 +20,19 @@ import { registerForPushNotificationsAsync } from '../lib/pushNotifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
-// Configuration handled in lib/pushNotifications.ts
+
+// Doit être appelé AVANT tout composant pour que les notifs s'affichent
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 try {
   SplashScreen.preventAutoHideAsync();
