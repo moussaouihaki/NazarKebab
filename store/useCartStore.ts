@@ -207,14 +207,10 @@ export const useCartStore = create<CartState>((set, get) => ({
           if (change.type === 'added') {
             const data = change.doc.data();
             const orderId = change.doc.id;
-            
-            // ALERT ADMIN
             useNotificationStore.getState().addNotification(
               "🔔 Nouvelle Commande !",
               `N° ${orderId} de ${data.customerName || 'Client'} (${data.total?.toFixed(2)} CHF)`
             );
-
-            // BROWSER NOTIFICATION (WEB)
             if (Platform.OS === 'web' && typeof window !== 'undefined' && 'Notification' in window) {
               if (Notification.permission === 'granted') {
                 new Notification("NAZAR KEBAB 🗞️", {
@@ -226,6 +222,31 @@ export const useCartStore = create<CartState>((set, get) => ({
           }
         });
       }
+
+      // CLIENT: detect status changes and add to notification bell
+      if (!isAdmin) {
+        const clientStatusMessages: Record<string, { title: string; body: string }> = {
+          confirmed: { title: "Commande Confirmée ✅", body: "Le restaurant a validé votre commande !" },
+          preparing: { title: "En Préparation 👨‍🍳", body: "Votre repas est en cours de préparation." },
+          ready:     { title: "Prête / En livraison 🛵", body: "Votre commande est prête / en route !" },
+          delivered: { title: "Livraison terminée 🎉", body: "Bon appétit ! Votre commande a été livrée." },
+          cancelled: { title: "Commande Annulée ❌", body: "Désolé, votre commande a été annulée." },
+        };
+
+        if (!isFirstLoad) {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'modified') {
+              const before = change.doc.metadata;
+              const after = change.doc.data();
+              const msg = clientStatusMessages[after.status];
+              if (msg) {
+                useNotificationStore.getState().addNotification(msg.title, msg.body);
+              }
+            }
+          });
+        }
+      }
+
       isFirstLoad = false;
 
       const orderList: Order[] = [];
