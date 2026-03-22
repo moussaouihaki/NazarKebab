@@ -226,11 +226,23 @@ export const useCartStore = create<CartState>((set, get) => ({
         if (!isFirstLoad) {
           snapshot.docChanges().forEach((change) => {
             if (change.type === 'modified') {
-              const before = change.doc.metadata;
               const after = change.doc.data();
               const msg = clientStatusMessages[after.status];
               if (msg) {
+                // 1. Bell notification (always works)
                 useNotificationStore.getState().addNotification(msg.title, msg.body);
+                
+                // 2. Local push notification (works on mobile when app is open/background)
+                if (Platform.OS !== 'web') {
+                  Notifications.scheduleNotificationAsync({
+                    content: {
+                      title: msg.title,
+                      body: msg.body,
+                      sound: 'default',
+                    },
+                    trigger: null, // immédiatement
+                  }).catch(() => {});
+                }
               }
             }
           });
