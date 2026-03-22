@@ -125,18 +125,25 @@ const cleanForFirebase = (obj: any): any => {
   return clean;
 };
 
-export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
-  total: 0,
-  deliveryFee: 0,
-  deliveryType: 'delivery',
-  customerName: '',
-  customerPhone: '',
-  customerAddress: '',
-  orderNote: '',
-  orders: [],
-  activeOrder: null,
-  isLoading: false,
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// ... (keep previous interfaces)
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      total: 0,
+      deliveryFee: 0,
+      deliveryType: 'delivery',
+      customerName: '',
+      customerPhone: '',
+      customerAddress: '',
+      orderNote: '',
+      orders: [],
+      activeOrder: null,
+      isLoading: false,
 
   listenToOrders: (userId?: string, isAdmin?: boolean, specificOrderId?: string) => {
     let q;
@@ -388,4 +395,18 @@ export const useCartStore = create<CartState>((set, get) => ({
       console.error('Erreur paiement commande:', err);
     }
   },
-}));
+}),
+{
+  name: 'nazar-cart-storage',
+  storage: createJSONStorage(() => AsyncStorage),
+  partialize: (state) => ({ 
+    items: state.items, 
+    total: state.total,
+    customerName: state.customerName,
+    customerPhone: state.customerPhone,
+    customerAddress: state.customerAddress,
+    activeOrder: state.activeOrder,
+  }),
+}
+)
+);
