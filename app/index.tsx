@@ -94,7 +94,7 @@ export default function HomeScreen() {
            <View style={styles.heroOverlay} />
            <View style={styles.heroContent}>
             <View style={styles.statusRow}>
-              <View style={[styles.statusIndicator, { backgroundColor: checkIsRestaurantOpen(settings) ? Theme.colors.success : Theme.colors.danger }]} />
+              <View style={[styles.statusIndicator, { backgroundColor: checkIsRestaurantOpen(settings) ? '#4CAF50' : '#FF2A2A' }]} />
               <Text style={styles.statusText}>{checkIsRestaurantOpen(settings) ? 'ACTUELLEMENT OUVERT' : 'FERMÉ ACTUELLEMENT'}</Text>
             </View>
               <Text style={styles.heroGolden}>DEPUIS 2005</Text>

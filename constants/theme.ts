@@ -6,8 +6,8 @@ export const Theme = {
     text: '#F5F5F5', // Off-white for less eye-strain
     textSecondary: '#8A8A8A', // Silver
     border: '#1A1A1A', // Edge-to-edge subtle lines
-    success: '#4CAF50', // Standard Green for "Open"
-    danger: '#FF2A2A', // Standard Red for "Closed"
+    success: '#FF2A2A', // Back to Brighter Red
+    danger: '#FF2A2A', // Back to Brighter Red
   },
   spacing: {
     xs: 4,
