@@ -1,4 +1,5 @@
 import { Stack, useSegments } from 'expo-router';
+import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -106,7 +107,7 @@ export default function RootLayout() {
       } catch (e) { console.warn('Manual restore failed', e); }
     };
     if (!currentUser) restoreOrder();
-  }, [currentUser, activeOrder, setActiveOrderById]); // Added activeOrder and setActiveOrderById to dependencies
+  }, [currentUser, activeOrder, setActiveOrderById]);
 
   useEffect(() => {
     const saveOrder = async () => {
@@ -135,19 +136,16 @@ export default function RootLayout() {
     return () => {
       if (unsubscribeOrders) unsubscribeOrders();
     };
-  }, [currentUser, activeOrder?.id, listenToOrders]); // NOW REACTIVE
+  }, [currentUser, activeOrder?.id, listenToOrders]);
 
   const seenNotifications = useRef(new Set<string>());
 
   useEffect(() => {
     const addIfNew = (id: string, title?: string | null, body?: string | null, data?: any) => {
-      // SÉCURITÉ : Ne rien ajouter à la cloche si l'utilisateur n'est pas connecté
       if (!useAuthStore.getState().user) {
         return;
       }
-
       if (!seenNotifications.current.has(id)) {
-        // Si c'est une notif de commande (orderId dans data), le Firestore listener s'en charge déjà → ignorer
         if (data?.orderId) return;
         if (!title || !body) return;
         seenNotifications.current.add(id);
@@ -155,7 +153,6 @@ export default function RootLayout() {
       }
     };
 
-    // 1. Notification reçue quand app est ouverte (foreground) - marketing uniquement
     const subscription = Notifications.addNotificationReceivedListener(notification => {
       addIfNew(
         notification.request.identifier,
@@ -165,7 +162,6 @@ export default function RootLayout() {
       );
     });
 
-    // 2. Utilisateur tape sur la notification (depuis background) - marketing uniquement
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
       addIfNew(
         response.notification.request.identifier,
@@ -198,7 +194,7 @@ export default function RootLayout() {
           <Text style={{ 
             fontFamily: 'BebasNeue_400Regular', 
             fontSize: 48, 
-            color: Theme.colors.success, // Use Gold
+            color: Theme.colors.success, 
             letterSpacing: 8,
             textAlign: 'center'
           }}>
@@ -211,45 +207,44 @@ export default function RootLayout() {
   }
 
   return (
-    <View style={styles.webWrapper}>
-      {!hideHeader && <DesktopHeader />}
-      <SafeAreaProvider style={styles.container}>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ 
-          headerShown: false, 
-          contentStyle: { backgroundColor: Theme.colors.background } 
-        }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="menu" />
-          <Stack.Screen 
-            name="product/[id]" 
-            options={{ 
-              presentation: 'modal',
-              animation: 'slide_from_bottom' 
-            }} 
-          />
-          <Stack.Screen 
-            name="cart" 
-            options={{ 
-              presentation: 'modal'
-            }} 
-          />
-          <Stack.Screen 
-            name="admin" 
-            options={{ presentation: 'modal' }} 
-          />
-          <Stack.Screen 
-            name="auth" 
-            options={{ presentation: 'modal', animation: 'slide_from_bottom' }} 
-          />
-          <Stack.Screen 
-            name="profile" 
-            options={{ presentation: 'modal', animation: 'slide_from_bottom' }} 
-          />
-          <Stack.Screen name="tracking" />
-        </Stack>
-      </SafeAreaProvider>
-    </View>
+    <SafeAreaProvider>
+      <Head>
+        <title>Nazar Kebab - Porrentruy</title>
+        <meta name="description" content="Nazar Kebab Porrentruy - Spécialités turques, kebabs, pizzas et plus encore." />
+        <link rel="icon" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+      </Head>
+      <ThemeProvider value={DarkTheme}>
+        <View style={styles.webWrapper}>
+          {!hideHeader && <DesktopHeader />}
+          <SafeAreaProvider style={styles.container}>
+            <StatusBar style="light" />
+            <Stack screenOptions={{ 
+              headerShown: false, 
+              contentStyle: { backgroundColor: Theme.colors.background } 
+            }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="menu" />
+              <Stack.Screen 
+                name="product/[id]" 
+                options={{ 
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom' 
+                }} 
+              />
+              <Stack.Screen 
+                name="cart" 
+                options={{ presentation: 'modal' }} 
+              />
+              <Stack.Screen name="admin" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="auth" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+              <Stack.Screen name="profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+              <Stack.Screen name="tracking" />
+            </Stack>
+          </SafeAreaProvider>
+        </View>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -265,7 +260,7 @@ const styles = StyleSheet.create({
   },
   loading: {
     flex: 1,
-    backgroundColor: '#121212', // Matches splash background
+    backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
   },
