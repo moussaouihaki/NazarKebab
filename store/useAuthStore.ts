@@ -25,6 +25,7 @@ export interface User {
   notifPromos: boolean;   // Notif promos/offres
   createdAt: any;         // Firestore Timestamp or Date
   pushToken?: string;
+  loyaltyPoints: number;  // Nouveau : points de fidélité
 }
 
 interface AuthState {
@@ -107,6 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           notifOrders: true,
           notifPromos: true,
           createdAt: new Date(),
+          loyaltyPoints: 0,
         };
         await setDoc(doc(db, 'users', uid), newUser);
         set({ user: newUser, isLoggedIn: true, isLoading: false });
@@ -142,6 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         notifOrders: true,
         notifPromos: true,
         createdAt: new Date(),
+        loyaltyPoints: 0,
       };
 
       await setDoc(doc(db, 'users', uid), newUser);

@@ -384,6 +384,18 @@ export const useCartStore = create<CartState>((set, get) => ({
           console.error('Erreur lors de l\'envoi push manuel:', e);
         }
       }
+
+      // NOUVEAU : Points de fidélité lors de la livraison
+      if (status === 'delivered' && orderData.userId) {
+        const userDoc = await getDoc(doc(db, 'users', orderData.userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const currentPoints = userData.loyaltyPoints || 0;
+          await updateDoc(doc(db, 'users', orderData.userId), { 
+            loyaltyPoints: currentPoints + 1 
+          });
+        }
+      }
     } catch (err) { console.error('Error updating order:', err); }
   },
 

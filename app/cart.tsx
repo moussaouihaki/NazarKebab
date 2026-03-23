@@ -7,6 +7,8 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useDeliveryZoneStore, DeliveryZone } from '../store/useDeliveryZoneStore';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import { getImageSource } from '../constants/data';
+import { useRestaurantStore } from '../store/useRestaurantStore';
 
 type Step = 'cart' | 'info' | 'confirmation';
 
@@ -18,8 +20,9 @@ export default function CartScreen() {
     customerName, customerPhone, customerAddress, orderNote,
   } = useCartStore();
 
-  const { user } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
   const { zones, getZoneForAddress, fetchZones } = useDeliveryZoneStore();
+  const { settings } = useRestaurantStore();
 
   useEffect(() => { fetchZones(); }, []);
 
@@ -32,6 +35,7 @@ export default function CartScreen() {
   const [placedOrder, setPlacedOrder] = useState<any>(null);
   const [detectedZone, setDetectedZone] = useState<DeliveryZone | null>(null);
   const [zoneError, setZoneError] = useState('');
+  const [useLoyalty, setUseLoyalty] = useState(false);
 
   const checkZone = (currentAddress: string, currentTotal: number, type: string) => {
     if (type === 'delivery' && currentAddress.length > 4) {
@@ -71,7 +75,8 @@ export default function CartScreen() {
     checkZone(address, total, deliveryType);
   }, [address, total, deliveryType, zones]);
 
-  const grandTotal = total + deliveryFee;
+  const loyaltyDiscount = useLoyalty ? 12.00 : 0; // Prix moyen offert pour un kebab
+  const grandTotal = Math.max(0, total + deliveryFee - loyaltyDiscount);
 
   const handleGoToInfo = () => {
     if (items.length === 0) return;
@@ -83,11 +88,16 @@ export default function CartScreen() {
     setStep('info');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setCustomerInfo(name, phone, address);
     setOrderNote(note);
+    
+    // Déduire les points si consommés
+    if (useLoyalty && user) {
+      await updateProfile({ loyaltyPoints: (user.loyaltyPoints || 0) - 10 });
+    }
+
     placeOrder(user?.id);
-    // Navigate to tracking screen
     router.replace('/tracking');
   };
 
@@ -302,7 +312,7 @@ export default function CartScreen() {
                 <View key={item.id} style={styles.cartItem}>
                   <View style={styles.itemImageBox}>
                     <Image 
-                      source={typeof item.image === 'string' ? { uri: item.image } : item.image} 
+                      source={getImageSource(item.image)} 
                       style={styles.itemImage} 
                       contentFit="cover" 
                     />
@@ -328,10 +338,57 @@ export default function CartScreen() {
                 </View>
               ))}
 
+              {/* LOYALTY CARD UI */}
+              {settings.loyaltyEnabled && user && (
+                <View style={styles.loyaltyCard}>
+                  <View style={styles.loyaltyHeader}>
+                    <Ionicons name="gift-outline" size={20} color={Theme.colors.success} />
+                    <Text style={styles.loyaltyTitle}>CARTE DE FIDÉLITÉ</Text>
+                    <Text style={styles.loyaltyPointsText}>{user.loyaltyPoints || 0} / 10</Text>
+                  </View>
+                  
+                  <View style={styles.loyaltyGrid}>
+                    {[...Array(10)].map((_, i) => (
+                      <View key={i} style={[styles.stamp, (user.loyaltyPoints || 0) > i && styles.stampFilled]}>
+                        <Ionicons 
+                          name={(user.loyaltyPoints || 0) > i ? "checkmark" : "restaurant-outline"} 
+                          size={14} 
+                          color={(user.loyaltyPoints || 0) > i ? "#000" : Theme.colors.textSecondary} 
+                        />
+                      </View>
+                    ))}
+                  </View>
+
+                  {(user.loyaltyPoints || 0) >= 10 && (
+                    <TouchableOpacity 
+                      style={[styles.useLoyaltyBtn, useLoyalty && styles.useLoyaltyBtnActive]}
+                      onPress={() => setUseLoyalty(!useLoyalty)}
+                    >
+                      <Ionicons name={useLoyalty ? "checkmark-circle" : "add-circle-outline"} size={20} color={useLoyalty ? "#000" : Theme.colors.success} />
+                      <Text style={[styles.useLoyaltyText, useLoyalty && styles.useLoyaltyTextActive]}>
+                        {useLoyalty ? "Kebab Gratuit Appliqué ! ✅" : "Utiliser mon Kebab Gratuit 🎁"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {(user.loyaltyPoints || 0) < 10 && (
+                   <Text style={styles.loyaltySubtext}>
+                     Encore {10 - (user.loyaltyPoints || 0)} commande(s) pour votre prochain cadeau !
+                   </Text>
+                  )}
+                </View>
+              )}
+
               <View style={styles.summaryBox}>
                 <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Sous-total</Text><Text style={styles.summaryValue}>{total.toFixed(2)} CHF</Text></View>
                 {deliveryType === 'delivery' && deliveryFee > 0 && (
                   <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Frais de livraison</Text><Text style={styles.summaryValue}>{deliveryFee.toFixed(2)} CHF</Text></View>
+                )}
+                {useLoyalty && (
+                   <View style={styles.summaryRow}>
+                     <Text style={[styles.summaryLabel, { color: Theme.colors.success }]}>Remise Fidélité</Text>
+                     <Text style={[styles.summaryValue, { color: Theme.colors.success }]}>-12.00 CHF</Text>
+                   </View>
                 )}
                 <View style={[styles.summaryRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Theme.colors.border, marginTop: 12, paddingTop: 12 }]}>
                   <Text style={[styles.summaryLabel, { fontFamily: Theme.fonts.title, fontSize: 20, color: Theme.colors.text }]}>TOTAL</Text>
@@ -424,4 +481,17 @@ const styles = StyleSheet.create({
   zoneBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 10, padding: 12, borderRadius: 10, borderWidth: 1, backgroundColor: Theme.colors.surface },
   zoneText: { fontFamily: Theme.fonts.bodyMedium, fontSize: 13, marginBottom: 2 },
   zoneSubText: { fontFamily: Theme.fonts.body, fontSize: 12, color: Theme.colors.textSecondary },
+  // Loyalty styles
+  loyaltyCard: { backgroundColor: '#1A1A1A', padding: 20, borderRadius: 20, borderStyle: 'dotted', borderWidth: 2, borderColor: '#333', marginTop: 20 },
+  loyaltyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, gap: 10 },
+  loyaltyTitle: { fontFamily: Theme.fonts.title, color: Theme.colors.text, fontSize: 16, letterSpacing: 2, flex: 1 },
+  loyaltyPointsText: { fontFamily: Theme.fonts.bodyBold, color: Theme.colors.success, fontSize: 12 },
+  loyaltyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 15, justifyContent: 'center' },
+  stamp: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: '#444', alignItems: 'center', justifyContent: 'center' },
+  stampFilled: { backgroundColor: Theme.colors.success, borderColor: Theme.colors.success },
+  loyaltySubtext: { fontFamily: Theme.fonts.body, fontSize: 11, color: Theme.colors.textSecondary, textAlign: 'center' , fontStyle: 'italic'},
+  useLoyaltyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 12, backgroundColor: Theme.colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Theme.colors.success },
+  useLoyaltyBtnActive: { backgroundColor: Theme.colors.success },
+  useLoyaltyText: { fontFamily: Theme.fonts.bodyBold, color: Theme.colors.success, fontSize: 13 },
+  useLoyaltyTextActive: { color: '#000' },
 });

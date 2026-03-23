@@ -45,6 +45,8 @@ export interface RestaurantSettings {
   drinks: Drink[];
   deliveryTime: string; // e.g. "30-45"
   takeAwayTime: string; // e.g. "15-20"
+  loyaltyEnabled: boolean; // Nouveau : carte de fidélité
+  loyaltyMinPoints: number; // Nouveau : points requis (ex: 10)
 }
 
 interface RestaurantState {
@@ -110,6 +112,8 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   ],
   deliveryTime: '30-45',
   takeAwayTime: '15-20',
+  loyaltyEnabled: true,
+  loyaltyMinPoints: 10,
 };
 
 export const useRestaurantStore = create<RestaurantState>((set, get) => ({
