@@ -11,5 +11,14 @@
       "distribution": "internal"
     },
     "production": {}
-  }
+    },
+    "submit": {
+      "production": {
+        "ios": {
+          "appleId": "hakimoussaoui@outlook.com",
+          "ascAppId": "6760980464",
+          "appleTeamId": "U2N7XDCQHG"
+        }
+      }
+    }
 }

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-nativ
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import { Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
-import { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
@@ -137,15 +137,22 @@ export default function RootLayout() {
     };
   }, [currentUser, activeOrder?.id, listenToOrders]); // NOW REACTIVE
 
-  useEffect(() => {
-    const seenIds = new Set<string>();
+  const seenNotifications = useRef(new Set<string>());
 
-    const addIfNew = (notifId: string, title: string | null | undefined, body: string | null | undefined, data?: any) => {
-      // Si c'est une notif de commande (orderId dans data), le Firestore listener s'en charge déjà → ignorer
-      if (data?.orderId) return;
-      if (!title || !body || seenIds.has(notifId)) return;
-      seenIds.add(notifId);
-      useNotificationStore.getState().addNotification(title, body);
+  useEffect(() => {
+    const addIfNew = (id: string, title?: string | null, body?: string | null, data?: any) => {
+      // SÉCURITÉ : Ne rien ajouter à la cloche si l'utilisateur n'est pas connecté
+      if (!useAuthStore.getState().user) {
+        return;
+      }
+
+      if (!seenNotifications.current.has(id)) {
+        // Si c'est une notif de commande (orderId dans data), le Firestore listener s'en charge déjà → ignorer
+        if (data?.orderId) return;
+        if (!title || !body) return;
+        seenNotifications.current.add(id);
+        useNotificationStore.getState().addNotification(title, body);
+      }
     };
 
     // 1. Notification reçue quand app est ouverte (foreground) - marketing uniquement
